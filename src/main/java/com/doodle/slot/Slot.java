@@ -43,4 +43,8 @@ public class Slot {
 
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
+
+    public boolean hasMeeting() {
+        return this.meeting != null;
+    }
 }
