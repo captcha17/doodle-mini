@@ -38,6 +38,9 @@ public class Slot {
     @JoinColumn(name = "meeting_id")
     private Meeting meeting;
 
+    @Version
+    private Long version;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
