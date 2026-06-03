@@ -1,0 +1,7 @@
+.git
+.gradle
+.idea
+src
+build/classes
+build/tmp
+build/reports
