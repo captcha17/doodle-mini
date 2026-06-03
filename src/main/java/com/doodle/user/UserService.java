@@ -2,6 +2,7 @@ package com.doodle.user;
 
 import com.doodle.calendar.Calendar;
 import com.doodle.calendar.CalendarRepository;
+import com.doodle.common.exception.ConflictException;
 import com.doodle.common.exception.ResourceNotFoundException;
 import com.doodle.user.dto.CreateUserRequest;
 import com.doodle.user.dto.UserResponse;
@@ -18,6 +19,10 @@ public class UserService {
 
     @Transactional
     public UserResponse createUser(CreateUserRequest request) {
+        if (userRepository.existsByEmail(request.email())) {
+            throw new ConflictException("User with email " + request.email() + " already exists");
+        }
+
         User user = new User();
         user.setName(request.name());
         user.setEmail(request.email());
