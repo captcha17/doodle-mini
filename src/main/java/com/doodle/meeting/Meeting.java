@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -21,7 +22,6 @@ public class Meeting {
     @Column(nullable = false)
     private String title;
 
-    @Column(nullable = false)
     private String description;
 
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -31,7 +31,7 @@ public class Meeting {
     private Instant updatedAt;
 
     @OneToMany(mappedBy = "meeting", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<MeetingParticipant> participants;
+    private List<MeetingParticipant> participants = new ArrayList<>();
 
     @PrePersist
     void prePersist() {

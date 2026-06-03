@@ -1,5 +1,6 @@
 package com.doodle.meeting;
 
+import com.doodle.common.exception.ConflictException;
 import com.doodle.common.exception.ResourceNotFoundException;
 import com.doodle.meeting.dto.CreateMeetingRequest;
 import com.doodle.meeting.dto.MeetingResponse;
@@ -27,6 +28,13 @@ public class MeetingService {
     public MeetingResponse createMeeting(CreateMeetingRequest request) {
         Slot slot = slotRepository.findById(request.slotId())
                 .orElseThrow(() -> ResourceNotFoundException.of("Slot", request.slotId()));
+
+        if (!slot.isAvailable()) {
+            throw new ConflictException("Slot is not available");
+        }
+        if (slot.hasMeeting()) {
+            throw new ConflictException("Slot already has a meeting");
+        }
 
         Meeting meeting = new Meeting();
         meeting.setTitle(request.title());

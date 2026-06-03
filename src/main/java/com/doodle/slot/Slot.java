@@ -55,6 +55,10 @@ public class Slot {
         this.updatedAt = Instant.now();
     }
 
+    public boolean isAvailable() {
+        return SlotStatus.AVAILABLE.equals(this.status);
+    }
+
     public boolean hasMeeting() {
         return this.meeting != null;
     }
