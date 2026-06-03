@@ -1,5 +1,6 @@
 package com.doodle.slot;
 
+import com.doodle.slot.dto.CommonAvailabilityResponse;
 import com.doodle.slot.dto.CreateSlotRequest;
 import com.doodle.slot.dto.SlotResponse;
 import com.doodle.slot.dto.UpdateSlotRequest;
@@ -63,5 +64,18 @@ public class SlotController {
             @RequestParam(required = false) SlotStatus status
     ) {
         return slotService.getAvailability(calendarId, from, to, status);
+    }
+
+    @GetMapping("/common-availability")
+    @Operation(
+            summary = "Find common free time across multiple calendars",
+            description = "Returns time windows where all specified calendars have available slots. Useful for scheduling meetings with multiple participants."
+    )
+    public List<CommonAvailabilityResponse> getCommonAvailability(
+            @RequestParam List<Long> calendarIds,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to
+    ) {
+        return slotService.getCommonAvailability(calendarIds, from, to);
     }
 }

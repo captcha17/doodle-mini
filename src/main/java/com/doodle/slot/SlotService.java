@@ -4,6 +4,7 @@ import com.doodle.calendar.Calendar;
 import com.doodle.calendar.CalendarRepository;
 import com.doodle.common.exception.ConflictException;
 import com.doodle.common.exception.ResourceNotFoundException;
+import com.doodle.slot.dto.CommonAvailabilityResponse;
 import com.doodle.slot.dto.CreateSlotRequest;
 import com.doodle.slot.dto.SlotResponse;
 import com.doodle.slot.dto.UpdateSlotRequest;
@@ -95,6 +96,48 @@ public class SlotService {
                 ? slotRepository.findByCalendarIdAndTimeRangeAndStatus(calendarId, from, to, status)
                 : slotRepository.findByCalendarIdAndTimeRange(calendarId, from, to);
         return slots.stream().map(SlotResponse::from).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<CommonAvailabilityResponse> getCommonAvailability(List<Long> calendarIds, LocalDateTime from, LocalDateTime to) {
+        validateTimes(from, to);
+        if (calendarIds == null || calendarIds.isEmpty()) {
+            throw new IllegalArgumentException("At least one calendarId is required");
+        }
+
+        List<CommonAvailabilityResponse> result = slotRepository
+                .findByCalendarIdAndTimeRangeAndStatus(calendarIds.get(0), from, to, SlotStatus.AVAILABLE)
+                .stream()
+                .map(s -> new CommonAvailabilityResponse(s.getStartTime(), s.getEndTime()))
+                .toList();
+
+        for (int i = 1; i < calendarIds.size(); i++) {
+            List<CommonAvailabilityResponse> next = slotRepository
+                    .findByCalendarIdAndTimeRangeAndStatus(calendarIds.get(i), from, to, SlotStatus.AVAILABLE)
+                    .stream()
+                    .map(s -> new CommonAvailabilityResponse(s.getStartTime(), s.getEndTime()))
+                    .toList();
+
+            result = intersect(result, next);
+        }
+
+        return result;
+    }
+
+    private List<CommonAvailabilityResponse> intersect(
+            List<CommonAvailabilityResponse> a,
+            List<CommonAvailabilityResponse> b
+    ) {
+        return a.stream()
+                .flatMap(slotA -> b.stream()
+                        .map(slotB -> {
+                            LocalDateTime start = slotA.from().isAfter(slotB.from()) ? slotA.from() : slotB.from();
+                            LocalDateTime end = slotA.to().isBefore(slotB.to()) ? slotA.to() : slotB.to();
+                            return start.isBefore(end) ? new CommonAvailabilityResponse(start, end) : null;
+                        })
+                        .filter(r -> r != null)
+                )
+                .toList();
     }
 
     private Slot findById(Long id) {
