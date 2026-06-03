@@ -25,10 +25,10 @@ public class Meeting {
     private String description;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant created_at;
+    private Instant createdAt;
 
     @Column(name = "updated_at", nullable = false)
-    private Instant updated_at;
+    private Instant updatedAt;
 
     @OneToMany(mappedBy = "meeting", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MeetingParticipant> participants;
