@@ -8,6 +8,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.format.annotation.DateTimeFormat;
+
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -42,5 +45,15 @@ public class SlotController {
     @GetMapping("/calendar/{calendarId}")
     public List<SlotResponse> getSlotsByCalendar(@PathVariable Long calendarId) {
         return slotService.getSlotsByCalendar(calendarId);
+    }
+
+    @GetMapping("/availability")
+    public List<SlotResponse> getAvailability(
+            @RequestParam Long calendarId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
+            @RequestParam(required = false) SlotStatus status
+    ) {
+        return slotService.getAvailability(calendarId, from, to, status);
     }
 }

@@ -24,7 +24,12 @@ public class SlotService {
     public SlotResponse createSlot(CreateSlotRequest request) {
         validateTimes(request.startTime(), request.endTime());
 
-        Calendar calendar = calendarRepository.findById(request.calendarId()).orElseThrow(() -> ResourceNotFoundException.of("Calendar", request.calendarId()));
+        Calendar calendar = calendarRepository.findById(request.calendarId())
+                .orElseThrow(() -> ResourceNotFoundException.of("Calendar", request.calendarId()));
+
+        if (slotRepository.existsOverlapping(calendar.getId(), request.startTime(), request.endTime(), null)) {
+            throw new ConflictException("Slot overlaps with an existing slot in this calendar");
+        }
 
         Slot slot = new Slot();
         slot.setCalendar(calendar);
@@ -53,6 +58,10 @@ public class SlotService {
 
         validateTimes(newStart, newEnd);
 
+        if (slotRepository.existsOverlapping(slot.getCalendar().getId(), newStart, newEnd, slot.getId())) {
+            throw new ConflictException("Updated slot overlaps with an existing slot");
+        }
+
         slot.setStartTime(newStart);
         slot.setEndTime(newEnd);
         slot.setStatus(request.status());
@@ -77,6 +86,15 @@ public class SlotService {
                 .stream()
                 .map(SlotResponse::from)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<SlotResponse> getAvailability(Long calendarId, LocalDateTime from, LocalDateTime to, SlotStatus status) {
+        validateTimes(from, to);
+        List<Slot> slots = status != null
+                ? slotRepository.findByCalendarIdAndTimeRangeAndStatus(calendarId, from, to, status)
+                : slotRepository.findByCalendarIdAndTimeRange(calendarId, from, to);
+        return slots.stream().map(SlotResponse::from).toList();
     }
 
     private Slot findById(Long id) {
